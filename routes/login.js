@@ -6,7 +6,12 @@ var User = require('../db/userSchema');
 require('dotenv').config();
 
 router.post('/', (req, res) => {
-    User.findOne({ email: req.body.email })
+    User.findOne({
+        $or: [
+            { email: req.body.emailOrUsername },
+            { username: req.body.emailOrUsername}
+        ]
+    })
         .then((user) => {
             const splitIDX = process.env.SALT_IDX2.split(",");
             const splitpass = user.password.split("");
@@ -20,8 +25,7 @@ router.post('/', (req, res) => {
                 .then((passChecked) => {
                     if (!passChecked) {
                         return res.status(400).send({
-                            message: "Password doesn't match",
-                            err: passChecked
+                            message: "Password kamu tidak valid"
                         });
                     }
 
@@ -34,20 +38,20 @@ router.post('/', (req, res) => {
                     );
 
                     res.status(200).send({
-                        message: "Login successfully",
+                        message: "Login berhasil",
                         token
                     });
                 })
                 .catch((err) => {
                     res.status(400).send({
-                        message: "Password doesn't match",
+                        message: "Password kamu tidak valid",
                         err
                     })
                 })
         })
         .catch((err) => {
             res.status(404).send({
-                message: "Email doesn't exist",
+                message: "Email / username tidak terdaftar",
                 err
             })
         })
